@@ -11,7 +11,7 @@ Check some rules to detect audio files tags inconsistencies:
 
 
 ```bash
-./audio-lib-checker --tracks --albums --only-errrors ~/Music
+./audio-lib-tools check --tracks --albums --only-errrors ~/Music
 ```
 
 ## Exporter
@@ -20,7 +20,7 @@ Export directory audio files to json
 
 
 ```bash
-./audio-lib-exporter ~/Music/ ~/Music/export.json
+./audio-lib-tools export  ~/Music/ ~/Music/export.json
 ```
 
 ## License

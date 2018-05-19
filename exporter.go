@@ -1,97 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
-
-	tag "github.com/dhowden/tag"
-	color "github.com/fatih/color"
-	cli "github.com/urfave/cli"
 )
-
-//Artist struct
-type Artist struct {
-	Name   string  `json:"name"`
-	Albums []Album `json:"-"`
-}
-
-//Album struct
-type Album struct {
-	Tracks []Track `json:"tracks"`
-	Name   string  `json:"name"`
-	Year   int     `json:"year"`
-	Artist Artist  `json:"artist"`
-}
-
-//Track struct
-type Track struct {
-	Track  int    `json:"track"`
-	Disc   int    `json:"disc"`
-	Title  string `json:"title"`
-	Album  Album  `json:"-"`
-	Artist Artist `json:"artist"`
-	Path   string `json:"path"`
-}
-
-//TrackFlat struct
-type TrackFlat struct {
-	Track       int
-	Disc        int
-	Title       string
-	Album       string
-	Artist      string
-	AlbumArtist string
-	Year        int
-	Path        string
-}
-
-func main() {
-	app := cli.NewApp()
-	app.Name = "audio-lib-exporter"
-	app.Version = "v0.0.2"
-	app.Usage = "Check your audio library files tags errors"
-
-	app.Action = func(c *cli.Context) error {
-
-		root := c.Args().Get(0)
-		if root == "" {
-			color.Red("A root must be specified.")
-			return nil
-		}
-
-		exportFile := c.Args().Get(1)
-		if exportFile == "" {
-			color.Red("Export file must be specified.")
-			return nil
-		}
-
-		tf := extract(root)
-		albums := transform(tf)
-
-		json, _ := json.Marshal(albums)
-
-		file, err := os.Create(exportFile)
-		if err != nil {
-			log.Fatal("Cannot create file", err)
-		}
-
-		file.WriteString(string(json))
-
-		defer file.Close()
-
-		color.Green("Success: %d albums successfully exported", len(albums))
-
-		return nil
-	}
-
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
 
 func extract(root string) []TrackFlat {
 	var tracks []string
@@ -113,12 +26,12 @@ func extract(root string) []TrackFlat {
 	})
 
 	for _, trackPath := range tracks {
-		file, err := os.Open(trackPath)
-		defer file.Close()
 
-		m, err := tag.ReadFrom(file)
+		m, err := getTrackMetaData(trackPath)
 		if err != nil {
 			fmt.Printf("error reading file: %v\n", err)
+
+			continue
 		}
 
 		track, _ := m.Track()
@@ -220,23 +133,5 @@ func albumExists(album Album, albums []Album) bool {
 		}
 	}
 
-	return false
-}
-
-func isAudioFile(extension string) bool {
-	switch extension {
-	case
-		".aac",
-		".mp4",
-		".m4a",
-		".ogg",
-		".oga",
-		".wma",
-		".wav",
-		".mp3",
-		".aif",
-		".flac":
-		return true
-	}
 	return false
 }

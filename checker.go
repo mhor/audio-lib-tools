@@ -2,77 +2,13 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	tag "github.com/dhowden/tag"
 	color "github.com/fatih/color"
-	cli "github.com/urfave/cli"
 )
-
-func main() {
-	app := cli.NewApp()
-	app.Name = "audio-lib-checker"
-	app.Version = "v0.0.4"
-	app.Usage = "Check your audio library files tags errors"
-	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:  "albums, a",
-			Usage: "Check albums.",
-		},
-		cli.BoolFlag{
-			Name:  "tracks, t",
-			Usage: "Check tracks.",
-		},
-		cli.BoolFlag{
-			Name:  "only-errors",
-			Usage: "Show only errors.",
-		},
-		cli.IntFlag{
-			Name:  "limit, l",
-			Usage: "Limit number of errors.",
-			Value: 0,
-		},
-	}
-
-	app.Action = func(c *cli.Context) error {
-
-		root := c.Args().Get(0)
-
-		var checkAlbums = true
-		var checkTracks = true
-
-		if c.Bool("albums") == true || c.Bool("tracks") == true {
-			checkAlbums = false
-			checkTracks = false
-		}
-
-		if c.Bool("tracks") == true {
-			checkTracks = true
-		}
-
-		if c.Bool("albums") == true {
-			checkAlbums = true
-		}
-
-		if root == "" {
-			color.Red("A root must be specified.")
-			return nil
-		}
-
-		check(root, checkTracks, checkAlbums, c.Int("limit"), c.Bool("only-errors"))
-
-		return nil
-	}
-
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
 
 func check(root string, checkTracks bool, checkAlbums bool, limit int, onlyErrors bool) {
 	var tracks []string
@@ -184,10 +120,7 @@ func checkTrackRules(path string, onlyErrors bool) ([]string, []string, error) {
 	var errors []string
 	var warnings []string
 
-	file, err := os.Open(path)
-	defer file.Close()
-
-	m, err := tag.ReadFrom(file)
+	m, err := getTrackMetaData(path)
 	if err != nil {
 		fmt.Printf("error reading file: %v\n", err)
 		return nil, nil, nil
@@ -407,51 +340,5 @@ func isUnknow(s string) bool {
 		return true
 	}
 
-	return false
-}
-
-func isAlbumDirectory(path string) bool {
-	files, err := ioutil.ReadDir(path)
-	if err != nil {
-		return false
-	}
-
-	for _, file := range files {
-		if file.IsDir() == false && isAudioFile(filepath.Ext(file.Name())) == true {
-			return true
-		}
-	}
-
-	return false
-}
-
-func isAudioFile(extension string) bool {
-	switch extension {
-	case
-		".aac",
-		".mp4",
-		".m4a",
-		".ogg",
-		".oga",
-		".wma",
-		".wav",
-		".mp3",
-		".aif",
-		".flac":
-		return true
-	}
-	return false
-}
-
-func sanitizeString(s string) string {
-	return strings.ToLower(strings.TrimSpace(s))
-}
-
-func containsInt(s []int, e int) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
 	return false
 }

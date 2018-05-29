@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 func extract(root string) []TrackFlat {
@@ -54,7 +57,35 @@ func extract(root string) []TrackFlat {
 	return t
 }
 
-func transform(tf []TrackFlat) []Album {
+func copyAlbumCover(album Album, dir string) string {
+	for _, track := range album.Tracks {
+		m, err := getTrackMetaData(track.Path)
+		if err != nil {
+			fmt.Printf("error reading file: %v\n", err)
+
+			continue
+		}
+
+		if nil == m.Picture() {
+			continue
+		}
+
+		fileName := dir + "/" + uuid.Must(uuid.NewV4()).String() + "." + m.Picture().Ext
+		file, err := os.Create(fileName)
+		if err != nil {
+			log.Fatal("Cannot create file", err)
+		}
+
+		file.Write(m.Picture().Data)
+
+		absFilePath, _ := filepath.Abs(fileName)
+		return absFilePath
+	}
+
+	return ""
+}
+
+func transform(tf []TrackFlat, exportAlbumCover bool, exportAlbumCoverDir string) []Album {
 	mAlbums := map[string]*Album{}
 	mArtists := map[string]*Artist{}
 	for _, trackFlat := range tf {
@@ -118,8 +149,17 @@ func transform(tf []TrackFlat) []Album {
 		}
 	}
 
+	if exportAlbumCover {
+		os.MkdirAll(exportAlbumCoverDir, os.ModePerm)
+	}
+
 	albums := []Album{}
 	for _, a := range mAlbums {
+
+		if exportAlbumCover {
+			a.CoverPath = copyAlbumCover(*a, exportAlbumCoverDir)
+		}
+
 		albums = append(albums, *a)
 	}
 

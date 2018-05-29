@@ -21,10 +21,11 @@ type Artist struct {
 
 //Album struct
 type Album struct {
-	Tracks []Track `json:"tracks"`
-	Name   string  `json:"name"`
-	Year   int     `json:"year"`
-	Artist Artist  `json:"artist"`
+	Tracks    []Track `json:"tracks"`
+	Name      string  `json:"name"`
+	Year      int     `json:"year"`
+	Artist    Artist  `json:"artist"`
+	CoverPath string  `json:"cover_path"`
 }
 
 //Track struct
@@ -108,6 +109,17 @@ func main() {
 		{
 			Name:  "export",
 			Usage: "Export tracks to a json file",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "covers, c",
+					Usage: "Extract covers.",
+				},
+				cli.StringFlag{
+					Name:  "covers-path",
+					Usage: "Extract covers into this directory.",
+					Value: "./covers",
+				},
+			},
 			Action: func(c *cli.Context) error {
 				root := c.Args().Get(0)
 				if root == "" {
@@ -121,11 +133,17 @@ func main() {
 					return nil
 				}
 
+				var exportCoversDirectory = c.String("covers-path")
+				var exportCovers = false
+				if c.Bool("covers") == true {
+					exportCovers = true
+				}
+
 				tf := extract(root)
-				albums := transform(tf)
+
+				albums := transform(tf, exportCovers, exportCoversDirectory)
 
 				json, _ := json.Marshal(albums)
-
 				file, err := os.Create(exportFile)
 				if err != nil {
 					log.Fatal("Cannot create file", err)

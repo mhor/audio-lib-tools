@@ -20,7 +20,7 @@ Export directory audio files to json
 
 
 ```bash
-./audio-lib-tools export  ~/Music/ ~/Music/export.json
+./audio-lib-tools export  ~/Music/ ~/Music/export.json --covers --covers-path=./covers
 ```
 
 ## License

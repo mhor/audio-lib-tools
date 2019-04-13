@@ -188,7 +188,7 @@ func sanitizeString(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
 
-func containsInt(s []int, e int) bool {
+func containsString(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
 			return true

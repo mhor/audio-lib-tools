@@ -240,12 +240,15 @@ func multipleAlbumNameRule(path string, tracks []tag.Metadata) (bool, string) {
 }
 
 func noSameTrackNumberRule(path string, tracks []tag.Metadata) (bool, string) {
-	var tracksNumbers []int
+	var tracksNumbers []string
 	for _, track := range tracks {
 
 		trackNumber, _ := track.Track()
-		if containsInt(tracksNumbers, trackNumber) == false {
-			tracksNumbers = append(tracksNumbers, trackNumber)
+		trackDisc, _ := track.Disc()
+		trackDiscAndNumber := fmt.Sprintf("%d-%d", trackDisc, trackNumber)
+
+		if containsString(tracksNumbers, trackDiscAndNumber) == false {
+			tracksNumbers = append(tracksNumbers, trackDiscAndNumber)
 		} else {
 			return true, "Directory contains same track number"
 		}

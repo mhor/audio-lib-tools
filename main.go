@@ -15,39 +15,49 @@ import (
 
 //Artist struct
 type Artist struct {
-	Name   string  `json:"name"`
-	Albums []Album `json:"-"`
+	Name         string  `json:"name,omitempty"`
+	Albums       []Album `json:"-"`
+	MbArtistUUID string  `json:"mb_artist_uuid,omitempty"`
 }
 
 //Album struct
 type Album struct {
-	Tracks    []Track `json:"tracks"`
-	Name      string  `json:"name"`
-	Year      int     `json:"year"`
-	Artist    Artist  `json:"artist"`
-	CoverPath string  `json:"cover_path"`
+	Tracks            []Track `json:"tracks"`
+	Name              string  `json:"name,omitempty"`
+	Year              int     `json:"year,omitempty"`
+	AlbumArtist       Artist  `json:"album_artist"`
+	CoverPath         string  `json:"cover_path,omitempty"`
+	MbAlbumArtistUUID string  `json:"mb_album_artist_uuid,omitempty"`
+	MbAlbumUUID       string  `json:"mb_album_uuid,omitempty"`
 }
 
 //Track struct
 type Track struct {
-	Track  int    `json:"track"`
-	Disc   int    `json:"disc"`
-	Title  string `json:"title"`
-	Album  Album  `json:"-"`
-	Artist Artist `json:"artist"`
-	Path   string `json:"path"`
+	Track        int    `json:"track"`
+	Disc         int    `json:"disc,omitempty"`
+	Title        string `json:"title,omitempty"`
+	Album        Album  `json:"-"`
+	Artist       Artist `json:"artist"`
+	Path         string `json:"path,omitempty"`
+	MbTrackUUID  string `json:"mb_track_uuid,omitempty"`
+	MbArtistUUID string `json:"mb_artist_uuid,omitempty"`
 }
 
 //TrackFlat struct
 type TrackFlat struct {
-	Track       int
-	Disc        int
-	Title       string
-	Album       string
-	Artist      string
-	AlbumArtist string
-	Year        int
-	Path        string
+	Track             int
+	Disc              int
+	Title             string
+	Album             string
+	Artist            string
+	AlbumArtist       string
+	Year              int
+	Path              string
+	MbTrackUUID       string
+	MbTrackArtistUUID string
+	MbAlbumArtistUUID string
+	MbAblumUUID       string
+	MbArtistUUID      string
 }
 
 func main() {

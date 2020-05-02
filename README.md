@@ -4,11 +4,10 @@
 
 Check some rules to detect audio files tags inconsistencies:
 
-- missing album name, track number or title
+- missing album name, track number, title, artist, album artist
 - track with diffrent album into same directory
 - same track number into same directory
 - title, artist, or album contains suspicious word (untitled, track, unknow)
-
 
 ```bash
 ./audio-lib-tools check --tracks --albums --only-errrors ~/Music

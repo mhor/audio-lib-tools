@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/dhowden/tag/mbz"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -37,18 +38,23 @@ func extract(root string) []TrackFlat {
 			continue
 		}
 
+		mbTags := mbz.Extract(m)
 		track, _ := m.Track()
 		disc, _ := m.Disc()
 		trackAbsPath, _ := filepath.Abs(trackPath)
 		oTrack := TrackFlat{
-			Track:       track,
-			Disc:        disc,
-			Title:       m.Title(),
-			Album:       m.Album(),
-			Artist:      m.Artist(),
-			AlbumArtist: m.AlbumArtist(),
-			Year:        m.Year(),
-			Path:        trackAbsPath,
+			Track:             track,
+			Disc:              disc,
+			Title:             m.Title(),
+			Album:             m.Album(),
+			Artist:            m.Artist(),
+			AlbumArtist:       m.AlbumArtist(),
+			Year:              m.Year(),
+			Path:              trackAbsPath,
+			MbTrackUUID:       mbTags.Get(mbz.Track),
+			MbTrackArtistUUID: mbTags.Get(mbz.Artist),
+			MbAlbumArtistUUID: mbTags.Get(mbz.AlbumArtist),
+			MbAblumUUID:       mbTags.Get(mbz.Album),
 		}
 
 		t = append(t, oTrack)
@@ -126,21 +132,25 @@ func transform(tf []TrackFlat, exportAlbumCover bool, exportAlbumCoverDir string
 			album, _ = mAlbums[slugAlbum]
 		} else {
 			album = &Album{
-				Name:   trackFlat.Album,
-				Year:   trackFlat.Year,
-				Artist: *artistAlbum,
+				Name:              trackFlat.Album,
+				Year:              trackFlat.Year,
+				MbAlbumArtistUUID: trackFlat.MbAlbumArtistUUID,
+				MbAlbumUUID:       trackFlat.MbAblumUUID,
+				AlbumArtist:       *artistAlbum,
 			}
 
 			mAlbums[slugAlbum] = album
 		}
 
 		track = &Track{
-			Track:  trackFlat.Track,
-			Disc:   trackFlat.Disc,
-			Title:  trackFlat.Title,
-			Album:  *album,
-			Artist: *artist,
-			Path:   trackFlat.Path,
+			Track:        trackFlat.Track,
+			Disc:         trackFlat.Disc,
+			Title:        trackFlat.Title,
+			Album:        *album,
+			Artist:       *artist,
+			Path:         trackFlat.Path,
+			MbTrackUUID:  trackFlat.MbTrackUUID,
+			MbArtistUUID: trackFlat.MbTrackArtistUUID,
 		}
 
 		album.Tracks = append(album.Tracks, *track)

@@ -164,6 +164,11 @@ func checkTrackRules(path string, onlyErrors bool) ([]string, []string, error) {
 		warnings = append(errors, reason)
 	}
 
+	errored, reason = suspiciousVariousArtistsAlbumArtistTagRule(path, m)
+	if errored == true && onlyErrors == false {
+		warnings = append(errors, reason)
+	}
+
 	errored, reason = unknowArtistTagRule(path, m)
 	if errored == true && onlyErrors == false {
 		warnings = append(errors, reason)
@@ -213,6 +218,11 @@ func checkAlbumRules(path string, onlyErrors bool) ([]string, []string, error) {
 		errors = append(errors, reason)
 	}
 
+	errored, reason = multipleAlbumArtistsRule(path, dirTracks)
+	if errored == true {
+		errors = append(errors, reason)
+	}
+
 	errored, reason = noSameTrackNumberRule(path, dirTracks)
 	if errored == true {
 		errors = append(errors, reason)
@@ -233,6 +243,24 @@ func multipleAlbumNameRule(path string, tracks []tag.Metadata) (bool, string) {
 		if firstAlbumName != track.Album() {
 
 			return true, fmt.Sprintf("Directory contains multiple album names (%s != %s)", firstAlbumName, track.Album())
+		}
+	}
+
+	return false, ""
+}
+
+func multipleAlbumArtistsRule(path string, tracks []tag.Metadata) (bool, string) {
+	var isFirst = true
+	var firstAlbumArtist string
+	for _, track := range tracks {
+		if isFirst == true {
+			firstAlbumArtist = track.AlbumArtist()
+			isFirst = false
+		}
+
+		if firstAlbumArtist != track.AlbumArtist() {
+
+			return true, fmt.Sprintf("Directory contains multiple album artists names (%s != %s)", firstAlbumArtist, track.AlbumArtist())
 		}
 	}
 
@@ -286,7 +314,16 @@ func missingAlbumArtistTagRule(path string, track tag.Metadata) (bool, string) {
 func unknowAlbumArtistTagRule(path string, track tag.Metadata) (bool, string) {
 	albumArtistName := sanitizeString(track.AlbumArtist())
 	if true == isUnknow(albumArtistName) {
-		return true, fmt.Sprintf("Album artist name should be unknow(%s).", track.AlbumArtist())
+		return true, fmt.Sprintf("Album artist name should be unknow (%s).", track.AlbumArtist())
+	}
+
+	return false, ""
+}
+
+func suspiciousVariousArtistsAlbumArtistTagRule(path string, track tag.Metadata) (bool, string) {
+	albumArtistName := sanitizeString(track.AlbumArtist())
+	if true == isVariousArtists(albumArtistName) && track.AlbumArtist() != "Various Artists" {
+		return true, fmt.Sprintf("Album artist name should be Various Artists (%s).", track.AlbumArtist())
 	}
 
 	return false, ""
@@ -304,7 +341,7 @@ func missingTrackTagRule(path string, track tag.Metadata) (bool, string) {
 func unknowTrackTagRule(path string, track tag.Metadata) (bool, string) {
 	trackName := sanitizeString(track.Title())
 	if true == isUnknow(trackName) {
-		return true, fmt.Sprintf("Track name should be unknow (%s).", track.Title())
+		return true, fmt.Sprintf("Track name should be untitled (%s).", track.Title())
 	}
 
 	return false, ""
@@ -322,7 +359,7 @@ func missingAlbumTagRule(path string, track tag.Metadata) (bool, string) {
 func unknowAlbumTagRule(path string, track tag.Metadata) (bool, string) {
 	albumName := sanitizeString(track.Album())
 	if true == isUnknow(albumName) {
-		return true, fmt.Sprintf("Album name should be unknow (%s).", track.Album())
+		return true, fmt.Sprintf("Album name should be untitled (%s).", track.Album())
 	}
 
 	return false, ""
@@ -341,6 +378,55 @@ func isUnknow(s string) bool {
 
 	if true == strings.Contains(s, "track") {
 		return true
+	}
+
+	return false
+}
+
+func isVariousArtists(s string) bool {
+	variousArtistsNames := []string{
+		"Various Artists", "Artistiaid Amrywiol", "Amrywiol", "Danske Kunstnere",
+		"Div. kunstnere", "Diverse danske artister", "Diverse kunstnere", "Diverse",
+		"Diverse Interpreten", "Diversen", "versch. Künstler", "Verschiedene",
+		"Verschiedene Interpreten", "Διάφοροι Καλλιτέχνες", "(various)",
+		"[Various Artists]", "Assorted Artists", "Assorted Christian Artists",
+		"Hairspray (Karaoke) Various Artists", "Miscellaneous", "Mixed Artists",
+		"More artists", "Multiple Artists", "Sampler", "Time Life Music: Various Artists",
+		"V. A.", "V. Artist", "V.A.", "V/a", "VA", "Varied", "Various",
+		"Various (not original artists)", "Various (original artists)",
+		"Various Artist - GoGo Wonderful", "Various Big Bands",
+		"Various Celtic Artists", "Various Composers", "Various DJ's", "Various Items",
+		"Various Military Bands", "Various Speakers", "Various Talented Artists", "Compilaciones",
+		"Varios", "Varios artistas", "Erinevad", "Erinevad esitajad", "Eri esittäjiä",
+		"Artistes divers", "Artistes variés", "Bande originale", "Collectif", "Collégiale",
+		"Comp.", "Compilation", "div.", "Divers", "Multi-artistes",
+		"Multi-interprètes", "Variées", "Variés", "A.A.V.V.", "AA.VV.", "AAVV", "Artisti Vari",
+		"ヴァリアス", "ヴァリアス・アーティスト", "オムニバス", "さまざまなアーティスト", "여러 아티스트",
+		"Diverse Artister", "Diverse Artiesten", "Diverse componisten", "Iedereen",
+		"Diverse Artistar", "Różni", "Różni artyści", "Różni wykonawcy", "Wszyscy artysci",
+		"Coletânea", "Vários", "Vários artistas", "Vários intérpretes", "razlichnye ispolniteli",
+		"[различные исполнители]", "Различные исполнители", "различных исполнителей",
+		"Разные артисты", "Razlièni izvajalci", "Blandade artister", "Blandat", "รวมศิลปิน",
+		"หลากหลายศิลปิน", "Çeşitli sanatçılar", "Rizni vykonavci", "Rizni vykonavtsi",
+		"різних виконавців", "Різні виконавці", "Hợp ca", "Nhiều ca sĩ", "Nhiều nghệ sĩ",
+		"Tốp ca", "Tốp ca nam", "群星", "合輯", "Various 80's", "Artis JK", "Artistas Varios",
+		"Artisti uniti per l'Emilia", "Assorted Artisits", "Concatenation Records", "Die Brandstifter",
+		"Div. artister", "DMT[REC]", "Dominicanos Varios", "La Historia de la Fania",
+		"Intérpretes Diversos", "MDB", "Multi Interprètes", "Multi‐interprètes", "Noevir", "OST",
+		"Stockfisch", "Tabu Recz", "Ｖ．Ａ.", "VA", "val", "VAR", "Vari", "Vari Artisti", "varias",
+		"Varias Artistas", "Varies", "Variois", "Varios artists", "Varios Intérpretes",
+		"Various Arists", "various aritsts", "Various Artist", "various artiste",
+		"Various Artistes", "Various Artists [DIY]", "華納群星", "Various Artitsts",
+		"Various Artsits", "Various Compiled By", "Various DHM Artists", "VariousArtist",
+		"Variuos", "Variuos Artists", "Varius", "Varius Artist", "Varius Artists", "Varoius",
+		"Varoius Artists", "Verious", "Vrious Artists", "VV AA", "ぱにぽにだっしゅ！", "世界小姐",
+		"原声带", "多位艺术家", "多位艺术家", "多位藝術家", "影视原声", "歌手",
+	}
+
+	for _, n := range variousArtistsNames {
+		if s == sanitizeString(n) {
+			return true
+		}
 	}
 
 	return false

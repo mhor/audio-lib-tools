@@ -5,7 +5,8 @@
 Check some rules to detect audio files tags inconsistencies:
 
 - missing album name, track number, title, artist, album artist
-- track with diffrent album into same directory
+- track had a suspicous "Various Artists" name  
+- track with diffrent album/album artist into same directory
 - same track number into same directory
 - title, artist, or album contains suspicious word (untitled, track, unknow)
 
